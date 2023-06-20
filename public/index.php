@@ -6,8 +6,8 @@ use app\controllers\ProductController;
 use app\core\Application;
 use Dotenv\Dotenv;
 
-// error_reporting(E_ALL);
-// ini_set('display_errors', '1');
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 //header("Access-Control-Max-Age: 3600");
