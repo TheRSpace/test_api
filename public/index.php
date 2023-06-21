@@ -10,6 +10,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTION");
 //header("Access-Control-Max-Age: 3600");
 header("Content-type: application/json; charset=UTF-8");
 
