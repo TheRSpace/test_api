@@ -98,7 +98,7 @@ class ProductController extends ProductRepository
         //$data = Application::getRequestData();
         $data = $this->request->getBody();
         //$data = $data["productValues"];
-        //var_dump($data);
+        var_dump($data);
 
         //return new Response(['message' => 'Product ' . $data . ' created'], 201);
         if ($data) {
@@ -196,7 +196,7 @@ class ProductController extends ProductRepository
                 return new Response(['error' => 'Product not found'], 400);
             }
         } else {
-            return new Response(['error' => 'Now valid data provided'], 400);
+            return new Response(['error' => 'No valid data provided'], 400);
         }
     }
     public function handleOptionsDeleteRequest()
