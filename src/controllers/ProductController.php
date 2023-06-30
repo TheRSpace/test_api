@@ -196,7 +196,7 @@ class ProductController extends ProductRepository
                 return new Response(['error' => 'Product not found'], 400);
             }
         } else {
-            return new Response(['error' => 'Now valid data provided'], 200);
+            return new Response(['error' => 'Now valid data provided'], 400);
         }
     }
     public function handleOptionsDeleteRequest()
