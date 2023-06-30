@@ -186,13 +186,17 @@ class ProductController extends ProductRepository
     {
         $data = $this->request->getBody();
         //$id = $this->request->getParams('id');
-        $row = $this->productRepository->getById($data['id']);
+        if ($data) {
+            $row = $this->productRepository->getById($data['id']);
 
-        if ($row) {
-            $this->productRepository->delete($data['id']);
-            return new Response(['message' => 'Product ' . $data['id'] . ' deleted'], 410);
+            if ($row) {
+                $this->productRepository->delete($data['id']);
+                return new Response(['message' => 'Product ' . $data['id'] . ' deleted'], 410);
+            } else {
+                return new Response(['error' => 'Product not found'], 400);
+            }
         } else {
-            return new Response(['error' => 'Product not found'], 400);
+            return new Response(['error' => 'Now valid data provided'], 200);
         }
     }
     public function handleOptionsDeleteRequest()
