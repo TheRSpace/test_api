@@ -98,7 +98,7 @@ class ProductController extends ProductRepository
         //$data = Application::getRequestData();
         $data = $this->request->getBody();
         //$data = $data["productValues"];
-        var_dump($data);
+        //var_dump($data);
 
         //return new Response(['message' => 'Product ' . $data . ' created'], 201);
         if ($data) {
@@ -177,7 +177,7 @@ class ProductController extends ProductRepository
 
         if ($row) {
             $this->productRepository->delete($id);
-            return new Response(['message' => 'Product ' . $id . ' deleted'], 410);
+            return new Response(['message' => 'Product ' . $id . ' deleted'], 200);
         } else {
             return new Response(['error' => 'Product not found'], 400);
         }
@@ -191,7 +191,7 @@ class ProductController extends ProductRepository
 
             if ($row) {
                 $this->productRepository->delete($data['id']);
-                return new Response(['message' => 'Product ' . $data['id'] . ' deleted'], 410);
+                return new Response(['message' => 'Product ' . $data['id'] . ' deleted'], 200);
             } else {
                 return new Response(['error' => 'Product not found'], 400);
             }
