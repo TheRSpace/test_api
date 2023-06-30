@@ -93,6 +93,14 @@ class Router
     {
         $response = new Response(['message' => "OK"], 200);
         $response->setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        $response->setHeader('Access-Control-Allow-Headers', '*');
+        $response->setHeader('Access-Control-Max-Age', '86400');
+        $response->send();
+    }
+    protected function handleOptionsDeleteRequest()
+    {
+        $response = new Response(['message' => "OK"], 200);
+        $response->setHeader('Access-Control-Allow-Methods', 'GET, DELETE');
         $response->setHeader('Access-Control-Allow-Headers', 'Content-Type');
         $response->setHeader('Access-Control-Max-Age', '86400');
         $response->send();

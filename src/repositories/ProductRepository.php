@@ -115,7 +115,7 @@ class ProductRepository
         //var_dump($objects);
         //print_r($objects);
 
-        //other emthode fetch objects
+        //other methode fetch objects
         //$result = $stmt->fetchObject("app\models\Product", [$this->connection]);
         //require_once(dirname(__DIR__) . "/models/Product.php");
         //$result = $stmt->fetchAll(\PDO::FETCH_CLASS, "app\models\Product");

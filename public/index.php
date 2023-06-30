@@ -10,7 +10,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTION");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 //header("Access-Control-Max-Age: 3600");
 header("Content-type: application/json; charset=UTF-8");
 
@@ -41,7 +41,10 @@ $router->get('/validate/', [ProductController::class, 'checkProductSku']);
 $router->post('/product', [ProductController::class, 'createProduct']);
 $router->get('/product/', [ProductController::class, 'showById']);
 $router->get('/product/sku/', [ProductController::class, 'showBySku']);
+$router->options('/product/', [ProductController::class, 'handleOptionsRequest']);
 $router->delete('/product/', [ProductController::class, 'deleteProduct']);
+$router->options('/products', [ProductController::class, 'handleOptionsDeleteRequest']);
+$router->delete('/products', [ProductController::class, 'deleteProducts']);
 $router->get('/type', [ProductController::class, 'getTypes']);
 //run application
 $app->run();

@@ -182,4 +182,26 @@ class ProductController extends ProductRepository
             return new Response(['error' => 'Product not found'], 400);
         }
     }
+    public function deleteProducts()
+    {
+        $data = $this->request->getBody();
+        //$id = $this->request->getParams('id');
+        $row = $this->productRepository->getById($data['id']);
+
+        if ($row) {
+            $this->productRepository->delete($data['id']);
+            return new Response(['message' => 'Product ' . $data['id'] . ' deleted'], 410);
+        } else {
+            return new Response(['error' => 'Product not found'], 400);
+        }
+    }
+    public function handleOptionsDeleteRequest()
+    {
+        $response = new Response(['message' => "OK"], 200);
+        $response->setHeader('Access-Control-Allow-Methods', 'GET, DELETE');
+        $response->setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        $response->setHeader('Access-Control-Max-Age', '86400');
+        $response->send();
+        return $response;
+    }
 }
