@@ -188,7 +188,6 @@ class ProductController extends ProductRepository
         //$id = $this->request->getParams('id');
         if (!is_array($data['ids'])) {
             $data['ids'] = [$data['ids']];
-            echo "array";
         }
         if ($data && isset($data['ids'])) {
             $productIds = $data['ids'];
