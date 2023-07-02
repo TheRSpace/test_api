@@ -8,7 +8,7 @@ use \Exception;
 use \PDO;
 
 /**
- * Class Products
+ * Class ProductRepository
  */
 
 class ProductRepository
@@ -152,6 +152,23 @@ class ProductRepository
             exit;
         }
     }
+    protected function getByIds(array $ids): array
+    {
+        try {
+            // Create placeholders for the number of IDs
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+            $query = "SELECT p.*, t.type_name, s.size, d.width, d.height, d.length, w.weight, JSON_OBJECT('height', d.height, 'width', d.width, 'length', d.length, 'weight', w.weight, 'size', s.size) as attributes FROM product p LEFT JOIN product_type t ON t.id = p.type_id LEFT JOIN size s ON s.product_id = p.id LEFT JOIN dimension d ON d.product_id = p.id LEFT JOIN weight w ON w.product_id = p.id WHERE p.id IN ($placeholders)";
+
+            $stmt = $this->connection->prepare($query);
+            $stmt->execute($ids);
+
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            var_dump($e->getMessage());
+            exit;
+        }
+    }
 
     protected function update($product)
     {
@@ -162,12 +179,29 @@ class ProductRepository
         $type = $product->getType();
         $query = "UPDATE product SET name=?, price=?, type_id=? WHERE id=?";
         $stmt  = $this->connection->prepare($query);
-        $stmt->execute([$name, $price, $type, $id]);
+        $stmt->execute([$sku, $name, $price, $type, $id]);
     }
 
     protected function delete($id)
     {
         $stmt = $this->connection->prepare("DELETE FROM product WHERE id=?");
         $stmt->execute([$id]);
+    }
+    protected function deleteSelected($ids)
+    {
+        try {
+            if (!is_array($ids)) {
+                $ids = [$ids];
+            }
+            // Create placeholders for the number of IDs
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+            $stmt = $this->connection->prepare("DELETE FROM product WHERE id IN ($placeholders)");
+            $stmt->execute($ids);
+            return true;
+        } catch (Exception $e) {
+            var_dump($e->getMessage());
+            return false;
+        }
     }
 }
