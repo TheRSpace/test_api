@@ -188,8 +188,8 @@ class ProductController extends ProductRepository
         //$id = $this->request->getParams('id');
         if ($data && isset($data['ids'])) {
             $productIds = $data['ids'];
-            $rows = $this->productRepository->getById($data['ids']);
-            echo $data;
+            $rows = $this->productRepository->getByIds($data['ids']);
+            //echo $data;
             if (count($rows) === count($productIds)) {
                 $success = $this->productRepository->deleteSelected($productIds);
                 if ($success) {
