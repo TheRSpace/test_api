@@ -32,7 +32,7 @@ class ProductController extends ProductRepository
         if ($newProducts) {
             return new Response($newProducts, 200);
         } else {
-            return new Response(['error' => 'Products not found'], 200);
+            return new Response(['info' => 'Products not found'], 200);
         }
     }
     public function getTypes()
