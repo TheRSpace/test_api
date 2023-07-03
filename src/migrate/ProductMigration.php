@@ -28,6 +28,7 @@ class ProductMigration
     }
     public function applyMigrations()
     {
+        //$this->createDatabase();
         $this->createMigrationsTable();
         $appliedMigratons = $this->getAppliedMigrations();
 
@@ -39,9 +40,9 @@ class ProductMigration
             if ($migration === '.' || $migration === '..') {
                 continue;
             }
-            require_once($this->rootDir  . '\src\migrate\migrations\\' . $migration);
+            require_once($this->rootDir  . '/src/migrate/migrations/' . $migration);
             $className = pathinfo($migration, PATHINFO_FILENAME);
-            $className = "app\migrate\migrations\\" . $className;
+            $className = "app/migrate/migrations/" . $className;
             $instance = new $className();
             $this->log("Applying migration $migration");
             $instance->up($this->connection);
