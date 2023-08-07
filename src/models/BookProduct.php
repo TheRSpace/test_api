@@ -9,10 +9,10 @@ namespace app\models;
 class BookProduct extends Product
 {
     private $weight;
-    public function __construct($id, $sku, $name, $price, $type_name, $weight) //$productsku, $productname, $productprice, $producttype)
+    public function __construct($id, $sku, $name, $price, $type_name, $attributes) //$productsku, $productname, $productprice, $producttype)
     {
         parent::__construct($id, $sku, $name, $price, $type_name);
-        $this->weight = $weight;
+        $this->weight = $attributes['weight'];
     }
     public function getWeight()
     {

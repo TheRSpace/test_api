@@ -3,7 +3,8 @@
 namespace app\models;
 
 /**
- * Class Product
+ * Class ProductClass
+ *
  */
 
 class ProductClass

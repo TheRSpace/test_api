@@ -5,10 +5,10 @@ namespace app\models;
 class DigitalProduct extends Product
 {
     private $size;
-    public function __construct($id, $sku, $name, $price, $type_name, $size)
+    public function __construct($id, $sku, $name, $price, $type_name, $attributes)
     {
         parent::__construct($id, $sku, $name, $price, $type_name);
-        $this->size = $size;
+        $this->size = $attributes['size'];
     }
 
     public function getSize()

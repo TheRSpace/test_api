@@ -97,8 +97,6 @@ class ProductController extends ProductRepository
     {
         //$data = Application::getRequestData();
         $data = $this->request->getBody();
-        //$data = $data["productValues"];
-        //var_dump($data);
 
         //return new Response(['message' => 'Product ' . $data . ' created'], 201);
         if ($data) {
@@ -115,28 +113,20 @@ class ProductController extends ProductRepository
                 $this->productRepository->insert($product->getType(), $attributes);
 
                 return new Response(['message' => 'Product ' . $product->getProductName() . ' created'], 201);
-            } //return new Response(['message' => 'Product ' . $product->getId() . ' created'], 201);
+            }
         } else {
             return new Response(['error' => 'No Valid data provided!'], 400);
         }
     }
-
     public function checkProductSku()
     {
         //$data = $this->request->getBody();
         $sku = $this->request->getParams('sku');
-        //var_dump($data);
-        //var_dump($this->request->getParams('sku'));
         if ($sku) {
-            $row = $this->productRepository->getBySku($sku);
-            if ($row) {
-                $response[] = array("valid" => false);
-            } else {
-                $response[] = array("valid" => true);
-            }
+            $product = $this->productRepository->getBySku($sku);
 
-            if ($row) {
-                return new Response($response, 200);
+            if ($product) {
+                return new Response(["valid" => false], 200);
             } else {
                 return new Response(["valid" => true], 200);
             }
@@ -144,39 +134,14 @@ class ProductController extends ProductRepository
             return new Response(['error' => 'No Valid data provided!'], 400);
         }
     }
-
-    //TODO update()
-    public function updateProduct()
-    {
-        $id = $this->request->getParams('id');
-        $row = $this->productRepository->getById($id);
-
-        if ($row) {
-            $product = $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
-            $data = $this->request->getBody();
-            if ($data) {
-                $product->setProductName($data['name']);
-                $product->setProductPrice($data['price']);
-                $product->setProductTypeName($data['type_name']);
-
-                $this->productRepository->update($product);
-
-                return new Response(['message' => 'Product with id:' . $id . ' updated'], 201);
-            } else {
-                return new Response(['error' => 'No valid data provided!'], 400);
-            }
-        } else {
-            return new Response(['error' => 'Product not found'], 400);
-        }
-    }
-    //TODO destroy()
     public function deleteProduct()
     {
         $id = $this->request->getParams('id');
         $row = $this->productRepository->getById($id);
 
         if ($row) {
-            $this->productRepository->delete($id);
+            $product = $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
+            $this->productRepository->delete($product);
             return new Response(['message' => 'Product ' . $id . ' deleted'], 200);
         } else {
             return new Response(['error' => 'Product not found'], 400);
@@ -191,13 +156,17 @@ class ProductController extends ProductRepository
         }
         if ($data && isset($data['ids'])) {
             $productIds = $data['ids'];
-            $productIdsString = implode(", ", $productIds);
-            $rows = $this->productRepository->getByIds($data['ids']);
-            //echo $data;
+            $rows = $this->productRepository->getByIds($productIds);
+
             if (count($rows) === count($productIds)) {
-                $success = $this->productRepository->deleteSelected($productIds);
+                $products = [];
+                foreach ($rows as $row) {
+                    $product = $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
+                    $products[] = $product;
+                }
+                $success = $this->productRepository->deleteSelected($products);
                 if ($success) {
-                    return new Response(['message' => 'Products ' . $productIdsString . ' deleted'], 200);
+                    return new Response(['message' => 'Products deleted'], 200);
                 } else {
                     return new Response(['error' => 'Failed to delete products'], 400);
                 }

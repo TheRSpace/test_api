@@ -4,8 +4,11 @@ namespace app\repositories;
 
 use app\core\Application;
 use app\migrate\ProductMigration;
+use app\models\Product;
+use app\models\ProductFactory;
 use \Exception;
 use \PDO;
+
 
 /**
  * Class ProductRepository
@@ -15,13 +18,15 @@ class ProductRepository
 {
 
     private PDO $connection;
+    private ProductFactory $productFactory;
 
     public function __construct()
     {
         $this->connection = Application::getApp()->getDbHost()->getConnection();
+        $this->productFactory = new ProductFactory();
     }
 
-    protected function create($product)
+    protected function create(Product $product)
     {
         $sku = $product->getProductSku();
         $name = $product->getProductName();
@@ -44,9 +49,9 @@ class ProductRepository
         $values = array_values($data);
         $placeholders = implode(',', array_fill(0, count($values), '?'));
 
-        $sql = "INSERT INTO $table (" . implode(',', $columns) . ") VALUES ($placeholders)";
+        $query = "INSERT INTO $table (" . implode(',', $columns) . ") VALUES ($placeholders)";
 
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->connection->prepare($query);
         $stmt->execute($values);
     }
     protected function get()
@@ -123,15 +128,17 @@ class ProductRepository
         return $products;
     }
 
-    protected function getBySku($sku): array
+    protected function getBySku($sku): ?Product
     {
-        $query = "SELECT * FROM product WHERE sku=?";
+        $query = "SELECT p.*, t.type_name, s.size, d.width, d.height, d.length, w.weight, JSON_OBJECT('height', d.height, 'width', d.width, 'length', d.length, 'weight', w.weight, 'size', s.size) as attributes FROM product p LEFT JOIN product_type t ON t.id = p.type_id LEFT JOIN size s ON s.product_id = p.id LEFT JOIN dimension d ON d.product_id = p.id LEFT JOIN weight w ON w.product_id = p.id WHERE p.sku = ?";
         $stmt = $this->connection->prepare($query);
         $stmt->execute([$sku]);
-        if ($row = $stmt->fetch()) {
-            return $row;
+        $row = $stmt->fetch();
+        if ($row) {
+
+            return $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
         } else {
-            return [];
+            return null;
         }
     }
 
@@ -182,22 +189,23 @@ class ProductRepository
         $stmt->execute([$sku, $name, $price, $type, $id]);
     }
 
-    protected function delete($id)
+    protected function delete(Product $product)
     {
+        $id = $product->getId();
         $stmt = $this->connection->prepare("DELETE FROM product WHERE id=?");
         $stmt->execute([$id]);
     }
-    protected function deleteSelected($ids)
+    protected function deleteSelected(array $products)
     {
+        $productIds = array_map(function ($product) {
+            return $product->getId();
+        }, $products);
         try {
-            if (!is_array($ids)) {
-                $ids = [$ids];
-            }
             // Create placeholders for the number of IDs
-            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $placeholders = implode(',', array_fill(0, count($productIds), '?'));
 
             $stmt = $this->connection->prepare("DELETE FROM product WHERE id IN ($placeholders)");
-            $stmt->execute($ids);
+            $stmt->execute($productIds);
             return true;
         } catch (Exception $e) {
             var_dump($e->getMessage());
