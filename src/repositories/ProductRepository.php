@@ -26,7 +26,6 @@ class ProductRepository
         $this->connection = Application::getApp()->getDbHost()->getConnection();
         $this->productFactory = new ProductFactory();
     }
-
     protected function create(Product $product)
     {
         $sku = $product->getProductSku();
@@ -113,34 +112,6 @@ class ProductRepository
             return null;
         }
     }
-    protected function getAllFetchClass()
-    {
-        $products = [];
-        $query = "SELECT * FROM product";
-        $stmt = $this->connection->query($query);
-        $stmt->setFetchMode(PDO::FETCH_CLASS, "app\models\ProductClass");
-        while ($row = $stmt->fetch()) {
-            $products[] = $row;
-        }
-        //$products = $stmt->fetchAll();
-        //$stmt = $this->connection->prepare($query);
-
-        //some method of fetch object
-        // $objects = [];
-        // while ($obj = $stmt->fetchObject("app\models\Product", [2, "rw3", "name", "231", 1])) {
-        //     $objects[$obj->getId()] = $obj;
-        // }
-        //var_dump($objects);
-        //print_r($objects);
-
-        //other methode fetch objects
-        //$result = $stmt->fetchObject("app\models\Product", [$this->connection]);
-        //require_once(dirname(__DIR__) . "/models/Product.php");
-        //$result = $stmt->fetchAll(\PDO::FETCH_CLASS, "app\models\Product");
-
-        return $products;
-    }
-
     protected function getBySku($sku): ?Product
     {
         $query = "SELECT p.*, t.type_name, s.size, d.width, d.height, d.length, w.weight, JSON_OBJECT('height', d.height, 'width', d.width, 'length', d.length, 'weight', w.weight, 'size', s.size) as attributes FROM product p LEFT JOIN product_type t ON t.id = p.type_id LEFT JOIN size s ON s.product_id = p.id LEFT JOIN dimension d ON d.product_id = p.id LEFT JOIN weight w ON w.product_id = p.id WHERE p.sku = ?";
@@ -154,7 +125,6 @@ class ProductRepository
             return null;
         }
     }
-
     protected function getById($id): ?Product
     {
         try {
@@ -164,7 +134,6 @@ class ProductRepository
             $row = $stmt->fetch();
             if ($row) {
                 return $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
-                //return $row;
             } else {
                 return null;
             }
@@ -197,7 +166,6 @@ class ProductRepository
             exit;
         }
     }
-
     protected function update($product): bool
     {
         $id = $product->getId();
@@ -209,7 +177,6 @@ class ProductRepository
         $stmt  = $this->connection->prepare($query);
         return $stmt->execute([$sku, $name, $price, $type, $id]);
     }
-
     protected function delete(Product $product): bool
     {
         $id = $product->getId();
@@ -232,4 +199,34 @@ class ProductRepository
             return false;
         }
     }
+
+    //?? Just testing an interesting method ignore the comented code
+    /*
+    protected function getAllFetchClass()
+    {
+        $products = [];
+        $query = "SELECT * FROM product";
+        $stmt = $this->connection->query($query);
+        $stmt->setFetchMode(PDO::FETCH_CLASS, "app\models\ProductClass");
+        while ($row = $stmt->fetch()) {
+            $products[] = $row;
+        }
+        //$products = $stmt->fetchAll();
+        //$stmt = $this->connection->prepare($query);
+
+        //some method of fetch object
+        // $objects = [];
+        // while ($obj = $stmt->fetchObject("app\models\Product", [2, "rw3", "name", "231", 1])) {
+        //     $objects[$obj->getId()] = $obj;
+        // }
+        //var_dump($objects);
+        //print_r($objects);
+
+        //other methode fetch objects
+        //$result = $stmt->fetchObject("app\models\Product", [$this->connection]);
+        //require_once(dirname(__DIR__) . "/models/Product.php");
+        //$result = $stmt->fetchAll(\PDO::FETCH_CLASS, "app\models\Product");
+
+        return $products;
+    }*/
 }

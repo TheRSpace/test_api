@@ -50,23 +50,6 @@ class ProductController extends ProductRepository
             return new Response(['error' => 'Product types not found'], 400);
         }
     }
-
-    //?? Just testing an interesting method ignore the comented code
-    /* public function getAllFetchClass()
-    {
-        $newProducts = [];
-        $products = $this->productRepository->getAllFetchClass();
-        foreach ($products as $product) {
-            $newProducts[] = $product->getAssociativeArray2();
-        }
-        if ($newProducts) {
-            return new Response($newProducts, 200);
-        } else {
-            return new Response(['error' => 'Products not found'], 400);
-        }
-     }
-     */
-
     public function migrate()
     {
         $this->productRepository->migrate();
@@ -93,7 +76,6 @@ class ProductController extends ProductRepository
             return new Response(['error' => 'Product ' . $sku . 'not found'], 400);
         }
     }
-
     public function createProduct()
     {
         $data = $this->request->getBody();
@@ -137,8 +119,11 @@ class ProductController extends ProductRepository
         $id = $this->request->getParams('id');
         $product = $this->productRepository->getById($id);
         if ($product) {
-            $this->productRepository->delete($product);
-            return new Response(['message' => 'Product ' . $product->getId() . ' deleted'], 200);
+            if ($this->productRepository->delete($product)) {
+                return new Response(['message' => 'Product ' . $product->getId() . ' deleted'], 200);
+            } else {
+                return new Response(['error' => 'Failed deleting product'], 400);
+            }
         } else {
             return new Response(['error' => 'Product not found'], 400);
         }
@@ -176,4 +161,20 @@ class ProductController extends ProductRepository
         $response->send();
         return $response;
     }
+
+    //?? Just testing an interesting method ignore the comented code
+    /* public function getAllFetchClass()
+    {
+        $newProducts = [];
+        $products = $this->productRepository->getAllFetchClass();
+        foreach ($products as $product) {
+            $newProducts[] = $product->getAssociativeArray2();
+        }
+        if ($newProducts) {
+            return new Response($newProducts, 200);
+        } else {
+            return new Response(['error' => 'Products not found'], 400);
+        }
+     }
+     */
 }
