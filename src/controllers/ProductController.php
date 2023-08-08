@@ -7,7 +7,7 @@ use app\repositories\ProductRepository;
 use app\core\Request;
 use app\core\Response;
 use app\models\ProductFactory;
-use GrahamCampbell\ResultType\Success;
+
 
 class ProductController extends ProductRepository
 {
@@ -50,6 +50,7 @@ class ProductController extends ProductRepository
             return new Response(['error' => 'Product types not found'], 400);
         }
     }
+
     //?? Just testing an interesting method ignore the comented code
     /* public function getAllFetchClass()
     {
@@ -65,6 +66,7 @@ class ProductController extends ProductRepository
         }
      }
      */
+
     public function migrate()
     {
         $this->productRepository->migrate();
@@ -94,10 +96,7 @@ class ProductController extends ProductRepository
 
     public function createProduct()
     {
-        //$data = Application::getRequestData();
         $data = $this->request->getBody();
-
-        //return new Response(['message' => 'Product ' . $data . ' created'], 201);
         if ($data) {
             try {
                 $product = $this->productRepository->getBySku($data['sku']);
@@ -121,7 +120,6 @@ class ProductController extends ProductRepository
     }
     public function checkProductSku()
     {
-        //$data = $this->request->getBody();
         $sku = $this->request->getParams('sku');
         if ($sku) {
             $product = $this->productRepository->getBySku($sku);
@@ -138,9 +136,7 @@ class ProductController extends ProductRepository
     {
         $id = $this->request->getParams('id');
         $product = $this->productRepository->getById($id);
-
         if ($product) {
-            //$product = $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
             $this->productRepository->delete($product);
             return new Response(['message' => 'Product ' . $product->getId() . ' deleted'], 200);
         } else {
@@ -150,7 +146,6 @@ class ProductController extends ProductRepository
     public function deleteProducts()
     {
         $data = $this->request->getBody();
-        //$id = $this->request->getParams('id');
         if (!is_array($data['ids'])) {
             $data['ids'] = [$data['ids']];
         }
