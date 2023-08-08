@@ -34,7 +34,7 @@ $app = new Application(dirname(__DIR__), $config);
 
 
 $router = Application::getRouter();
-$router->get('/', [ProductController::class, 'get']);
+$router->get('/', [ProductController::class, 'migrate']);
 $router->options('/product', [ProductController::class, 'handleOptionsRequest']);
 $router->get('/products', [ProductController::class, 'getAll']);
 $router->get('/validate/', [ProductController::class, 'checkProductSku']);
@@ -45,6 +45,6 @@ $router->options('/product/', [ProductController::class, 'handleOptionsRequest']
 $router->delete('/product/', [ProductController::class, 'deleteProduct']);
 $router->options('/products', [ProductController::class, 'handleOptionsDeleteRequest']);
 $router->delete('/products', [ProductController::class, 'deleteProducts']);
-$router->get('/type', [ProductController::class, 'getTypes']);
+$router->get('/type', [ProductController::class, 'getProductTypes']);
 //run application
 $app->run();

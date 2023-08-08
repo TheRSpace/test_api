@@ -39,7 +39,6 @@ class ProductFactory
         'Furniture' => FurnitureProduct::class,
         'DVD' => DigitalProduct::class,
         'Book' => BookProduct::class,
-        // Add more product types here as needed
     ];
 
     public function createProduct($id, $sku, $name, $price, $type, $attributes)

@@ -6,6 +6,7 @@ use app\core\Application;
 use app\migrate\ProductMigration;
 use app\models\Product;
 use app\models\ProductFactory;
+use app\models\ProductType;
 use \Exception;
 use \PDO;
 
@@ -31,19 +32,38 @@ class ProductRepository
         $sku = $product->getProductSku();
         $name = $product->getProductName();
         $price = $product->getProductPrice();
-        $type_name = $product->getProductTypeName();
-        //var_dump($type_name);
-        $type_id = $this->getTypeId($type_name)["id"];
-        //var_dump($type_id["id"]);
-        $query = "INSERT INTO product(sku, name, price, type_id)VALUES(?, ?, ?, ?)";
-        $stmt = $this->connection->prepare($query);
-        $stmt->execute([$sku, $name, $price, $type_id]);
-        $product->setId($this->connection->lastInsertId());
+        $typeName = $product->getProductTypeName();
+        $productType = $this->getTypeByName($typeName);
+        if ($productType) {
+            $type_id = $productType->getId();
+            $query = "INSERT INTO product(sku, name, price, type_id)VALUES(?, ?, ?, ?)";
+            $stmt = $this->connection->prepare($query);
 
+            if ($stmt->execute([$sku, $name, $price, $type_id])) {
 
-        return ["product_id" => $this->connection->lastInsertId()];
+                if ($stmt->rowCount() > 0) {
+                    $product->setId($this->connection->lastInsertId());
+                    $id = $product->getId();
+
+                    if ($id) {
+                        $data = $product->getAttributes();
+                        //array key for id is very important for automated insert() to work
+                        $attributes = array_merge(["product_id" => $id], $data);
+                        //Insert attributes in database table based on product type
+                        if ($this->insert($product->getType(), $attributes)) {
+                            return true;
+                        } else {
+                            $this->delete($product);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
-    protected function insert($table, $data)
+    protected function insert(string $table, array $data): bool
     {
         $columns = array_keys($data);
         $values = array_values($data);
@@ -52,9 +72,9 @@ class ProductRepository
         $query = "INSERT INTO $table (" . implode(',', $columns) . ") VALUES ($placeholders)";
 
         $stmt = $this->connection->prepare($query);
-        $stmt->execute($values);
+        return $stmt->execute($values);
     }
-    protected function get()
+    protected function migrate()
     {
         $migration = new ProductMigration($this->connection, Application::getApp()->getRootDir());
         $migration->applyMigrations();
@@ -62,47 +82,40 @@ class ProductRepository
     protected function getAll()
     {
         $products = [];
-
         $query = "SELECT p.*, t.type_name, s.size, d.width, d.height, d.length, w.weight, JSON_OBJECT('height', d.height, 'width', d.width, 'length', d.length, 'weight', w.weight, 'size', s.size) as attributes FROM product p LEFT JOIN product_type t ON t.id = p.type_id LEFT JOIN size s ON s.product_id = p.id LEFT JOIN dimension d ON d.product_id = p.id LEFT JOIN weight w ON w.product_id = p.id ORDER BY p.id";
         $stmt = $this->connection->query($query);
         while ($row = $stmt->fetch()) {
-            //var_dump($row);
-            $products[] = $row;
+            $products[] = $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
         }
-        //$products = $stmt->fetchAll();
 
         return $products;
     }
-    protected function getTypes()
+    protected function getTypes(): array
     {
         $types = [];
-
         $query = "SELECT * FROM product_type";
         $stmt = $this->connection->query($query);
         while ($row = $stmt->fetch()) {
-            //var_dump($row);
-            $types[] = $row;
+            $types[] = new ProductType($row['id'], $row['type_name']);
         }
-        //$products = $stmt->fetchAll();
 
         return $types;
     }
-    protected function getTypeId($typeName)
+    protected function getTypeByName($typeName): ?ProductType
     {
-
         $query = "SELECT * FROM product_type WHERE type_name=?";
         $stmt = $this->connection->prepare($query);
         $stmt->execute([$typeName]);
         if ($row = $stmt->fetch()) {
-            return $row;
+            $type = new ProductType($row['id'], $row['type_name']);
+            return $type;
         } else {
-            return [];
+            return null;
         }
     }
     protected function getAllFetchClass()
     {
         $products = [];
-
         $query = "SELECT * FROM product";
         $stmt = $this->connection->query($query);
         $stmt->setFetchMode(PDO::FETCH_CLASS, "app\models\ProductClass");
@@ -142,17 +155,18 @@ class ProductRepository
         }
     }
 
-    protected function getById($id): array
+    protected function getById($id): ?Product
     {
         try {
             $query = "SELECT p.*, t.type_name, s.size, d.width, d.height, d.length, w.weight, JSON_OBJECT('height', d.height, 'width', d.width, 'length', d.length, 'weight', w.weight, 'size', s.size) as attributes FROM product p LEFT JOIN product_type t ON t.id = p.type_id LEFT JOIN size s ON s.product_id = p.id LEFT JOIN dimension d ON d.product_id = p.id LEFT JOIN weight w ON w.product_id = p.id WHERE p.id = ?";
             $stmt = $this->connection->prepare($query);
             $stmt->execute([$id]);
-
-            if ($row = $stmt->fetch()) {
-                return $row;
+            $row = $stmt->fetch();
+            if ($row) {
+                return $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
+                //return $row;
             } else {
-                return [];
+                return null;
             }
         } catch (Exception $e) {
             var_dump($e->getMessage());
@@ -164,20 +178,27 @@ class ProductRepository
         try {
             // Create placeholders for the number of IDs
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
             $query = "SELECT p.*, t.type_name, s.size, d.width, d.height, d.length, w.weight, JSON_OBJECT('height', d.height, 'width', d.width, 'length', d.length, 'weight', w.weight, 'size', s.size) as attributes FROM product p LEFT JOIN product_type t ON t.id = p.type_id LEFT JOIN size s ON s.product_id = p.id LEFT JOIN dimension d ON d.product_id = p.id LEFT JOIN weight w ON w.product_id = p.id WHERE p.id IN ($placeholders)";
-
             $stmt = $this->connection->prepare($query);
             $stmt->execute($ids);
-
-            return $stmt->fetchAll();
+            $rows = $stmt->fetchAll();
+            if ($rows) {
+                $products = [];
+                foreach ($rows as $row) {
+                    $product = $this->productFactory->createProduct($row['id'], $row['sku'], $row['name'], $row['price'], $row['type_name'], $row['attributes']);
+                    $products[] = $product;
+                }
+                return $products;
+            } else {
+                return [];
+            }
         } catch (Exception $e) {
             var_dump($e->getMessage());
             exit;
         }
     }
 
-    protected function update($product)
+    protected function update($product): bool
     {
         $id = $product->getId();
         $sku = $product->getSku();
@@ -186,16 +207,16 @@ class ProductRepository
         $type = $product->getType();
         $query = "UPDATE product SET name=?, price=?, type_id=? WHERE id=?";
         $stmt  = $this->connection->prepare($query);
-        $stmt->execute([$sku, $name, $price, $type, $id]);
+        return $stmt->execute([$sku, $name, $price, $type, $id]);
     }
 
-    protected function delete(Product $product)
+    protected function delete(Product $product): bool
     {
         $id = $product->getId();
         $stmt = $this->connection->prepare("DELETE FROM product WHERE id=?");
-        $stmt->execute([$id]);
+        return $stmt->execute([$id]);
     }
-    protected function deleteSelected(array $products)
+    protected function deleteSelected(array $products): bool
     {
         $productIds = array_map(function ($product) {
             return $product->getId();
@@ -205,8 +226,7 @@ class ProductRepository
             $placeholders = implode(',', array_fill(0, count($productIds), '?'));
 
             $stmt = $this->connection->prepare("DELETE FROM product WHERE id IN ($placeholders)");
-            $stmt->execute($productIds);
-            return true;
+            return $stmt->execute($productIds);
         } catch (Exception $e) {
             var_dump($e->getMessage());
             return false;
